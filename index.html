@@ -1,0 +1,112 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Dish Wash Business Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F7EA;--ink:#0F2F2A;--card:#fff;--teal:#0E7C6B;--lem:#F1D62F;--red:#C8442F;--mut:#5F7470;--ln:#DCE5D2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0C1F1C;--ink:#E6F0E3;--card:#142B27;--mut:#93ADA7;--ln:#23433D;--teal:#3DBFA8}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:16px/1.4 "Bricolage Grotesque",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:90px}
+#v{padding:14px;max-width:640px;margin:auto}
+h2{font-size:26px;font-weight:800;margin:6px 0 12px}h3{margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.k{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;cursor:pointer}
+.k b{display:block;font-size:20px;font-weight:800}.k span,.mut{color:var(--mut);font-size:13px}
+.big{background:var(--teal);color:#fff;border-radius:18px;padding:16px;margin-bottom:10px;cursor:pointer}.big b{font-size:34px;font-weight:800;display:block}
+button{font:inherit;font-weight:600;background:var(--teal);color:#fff;border:0;border-radius:12px;padding:12px 16px;min-height:46px}
+button.g{background:transparent;color:var(--ink);border:1px solid var(--ln)}button.d{background:var(--red)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}.r{display:flex;gap:8px;margin-top:12px}.r button{flex:1}
+.bar{height:10px;border-radius:6px;background:var(--lem);overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--teal)}
+.tag{font-size:12px;font-weight:600;background:var(--lem);color:#3a3300;border-radius:8px;padding:2px 8px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav a{flex:1;text-align:center;padding:12px 2px;font-size:12px;font-weight:600;color:var(--mut)}nav a.on{color:var(--teal);box-shadow:inset 0 3px var(--teal)}
+#m{display:none;position:fixed;inset:0;background:#0009;align-items:flex-end;justify-content:center;z-index:9}
+.sh{background:var(--card);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
+label{display:block;font-size:13px;color:var(--mut);margin-top:8px}
+input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid var(--ln);border-radius:10px;background:var(--bg);color:var(--ink);margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 3px;border-bottom:1px solid var(--ln);text-align:right}td:first-child,th:first-child{text-align:left}
+.neg{color:var(--red)}#t{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;display:none}
+@media print{body>*:not(#m){display:none!important}#m{position:static;background:none;display:block!important}.sh button,.r{display:none}}
+</style></head><body><div id="v"></div><div id="t"></div><div id="m" onclick="if(event.target==this)cl()"></div>
+<nav id="n"></nav>
+<script>
+const K='dwbm1';let D;try{D=JSON.parse(localStorage.getItem(K))}catch(e){}
+D=D||{b:[],s:[],c:[],e:[],a:[],p:[],set:{name:'My Dish Wash Co.',cur:'Rs.'}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(D))}catch(e){toast('Storage full or blocked')}};
+const $=i=>document.getElementById(i),num=v=>parseFloat(v)||0,uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const m=n=>D.set.cur+' '+(Math.round(n*100)/100).toLocaleString(),today=()=>new Date().toISOString().slice(0,10);
+const CO=[['raw','Raw materials'],['bot','Bottles'],['cap','Caps'],['lab','Labels'],['fra','Fragrance'],['col','Colour'],['lbr','Labour'],['ele','Electricity'],['trn','Transport'],['oth','Other']];
+const saleTot=s=>s.q*s.p-s.d,saleNet=s=>s.q?saleTot(s)*(s.q-(s.r||0))/s.q:0;
+function bs(b){const ss=D.s.filter(s=>s.b==b.id),sold=ss.reduce((a,s)=>a+s.q-(s.r||0),0),rev=ss.reduce((a,s)=>a+saleNet(s),0),
+dmg=D.a.filter(x=>x.b==b.id).reduce((a,x)=>a+x.q,0),cost=CO.reduce((a,c)=>a+num(b.k[c[0]]),0),
+bot=b.bottles>0?b.bottles:Math.floor(b.litres*1000/b.ml+1e-9),rem=bot-sold-dmg;
+return{sold,rev,dmg,cost,bot,rem,remL:rem*b.ml/1000,soldL:sold*b.ml/1000,profit:rev-cost,pot:rem*b.price,cpl:b.litres?cost/b.litres:0,cpb:bot?cost/bot:0}}
+const cbal=c=>num(c.ob)+D.s.filter(s=>s.c==c.id).reduce((a,s)=>a+saleNet(s)-s.paid,0)-D.p.filter(p=>p.c==c.id).reduce((a,p)=>a+p.amt,0);
+const cname=id=>(D.c.find(c=>c.id==id)||{name:'General Customer'}).name;
+function toast(x){const t=$('t');t.textContent=x;t.style.display='block';setTimeout(()=>t.style.display='none',2800)}
+function sheet(h){$('m').innerHTML='<div class="sh">'+h+'</div>';$('m').style.display='flex'}
+function cl(){$('m').style.display='none';render()}
+function ask(msg,fn){sheet(`<h3>Are you sure you want to delete this record?</h3><p class=mut>${msg}</p><div class=r><button class=g onclick="cl()">Cancel</button><button class=d onclick="window.yes()">Delete</button></div>`);window.yes=()=>{fn();save();cl()}}
+function form(t,fs,v,ok){v=v||{};sheet(`<h3>${t}</h3>`+fs.map(f=>`<label>${f[1]}`+(f[2]=='sel'?`<select id="f_${f[0]}">${f[3].map(o=>`<option value="${o[0]}" ${v[f[0]]==o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>`:`<input id="f_${f[0]}" type="${f[2]}" step="any" value="${v[f[0]]??''}">`)+'</label>').join('')+'<div class=r><button class=g onclick="cl()">Cancel</button><button onclick="window.sv()">Save</button></div>');
+window.sv=()=>{const o={};fs.forEach(f=>{const e=$('f_'+f[0]);o[f[0]]=f[2]=='number'?num(e.value):e.value});if(ok(o)!==false){save();cl()}}}
+let tab='d';const go=t=>{tab=t;render()};
+const NAV=[['d','Home'],['b','Batches'],['s','Sales'],['k','Stock'],['c','Customers'],['x','More']];
+/* ---------- Batches ---------- */
+const bF=[['name','Batch name','text'],['no','Batch number','text'],['date','Date','date'],['litres','Total batch size (litres)','number'],['ml','Bottle size (ml, any value)','number'],['bottles','Bottles produced (leave 0 to auto-calculate)','number'],['price','Selling price per bottle','number'],...CO.map(c=>['k_'+c[0],c[1]+' cost','number']),['notes','Notes','text']];
+function batchForm(b){const v=b?{...b,...Object.fromEntries(CO.map(c=>['k_'+c[0],b.k[c[0]]]))}:{date:today(),ml:500,bottles:0};
+form(b?'Edit batch':'New batch',bF,v,o=>{if(!o.name||o.litres<=0||o.ml<=0){toast('Enter name, litres and bottle size');return false}
+const n={id:b?b.id:uid(),name:o.name,no:o.no,date:o.date,litres:o.litres,ml:o.ml,bottles:o.bottles,price:o.price,notes:o.notes,k:{}};CO.forEach(c=>n.k[c[0]]=o['k_'+c[0]]);
+if(b){const st=bs(n);if(st.rem<0){toast('Change would make stock negative');return false}D.b[D.b.findIndex(x=>x.id==b.id)]=n}else D.b.push(n)})}
+function batchCard(b){const s=bs(b),pc=s.bot?Math.max(0,s.rem/s.bot*100):0;
+return`<div class=card onclick="batchView('${b.id}')"><div class=row><b>${b.name} ${b.no?'#'+b.no:''}</b><span class=tag>${s.rem<=0?'Completed':'Active'}</span></div>
+<div class=mut>${b.date} · ${b.litres} L · ${b.ml} ml bottles</div><div class=bar><i style="width:${pc}%"></i></div>
+<div class=row><span>${s.rem} of ${s.bot} bottles left</span><span>${s.remL.toFixed(2)} L</span></div>
+<div class=row><span class=mut>Sales ${m(s.rev)}</span><b class="${s.profit<0?'neg':''}">Profit ${m(s.profit)}</b></div></div>`}
+function batchView(id){const b=D.b.find(x=>x.id==id),s=bs(b),ss=D.s.filter(x=>x.b==id).sort((a,c)=>c.dt.localeCompare(a.dt));
+sheet(`<h3>${b.name} ${b.no?'#'+b.no:''}</h3><table>${[['Original',b.litres+' L / '+s.bot+' bottles ('+b.ml+' ml)'],['Sold',s.sold+' bottles / '+s.soldL.toFixed(2)+' L'],['Damaged / lost',s.dmg],['Remaining',s.rem+' bottles / '+s.remL.toFixed(2)+' L'],['Total cost',m(s.cost)],['Cost per litre',m(s.cpl)],['Cost per bottle',m(s.cpb)],['Revenue',m(s.rev)],['Realized profit',m(s.profit)],['Value of remaining stock',m(s.pot)]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+<h3 style="margin-top:14px">Sales history</h3>${ss.map(x=>`<div class=row><span class=mut>${x.dt} · ${cname(x.c)}</span><span>${x.q-(x.r||0)} × ${m(x.p)}</span></div>`).join('')||'<p class=mut>No sales yet.</p>'}
+<div class=r><button class=g onclick="cl()">Close</button><button onclick="batchForm(D.b.find(x=>x.id=='${id}'))">Edit</button><button class=d onclick="delBatch('${id}')">Delete</button></div>`)}
+function delBatch(id){if(D.s.some(s=>s.b==id)||D.a.some(a=>a.b==id)){toast('Batch has sales or adjustments. Delete those first.');return}ask('The batch will be removed.',()=>D.b=D.b.filter(b=>b.id!=id))}
+/* ---------- Sales ---------- */
+function saleForm(s){const bo=D.b.filter(b=>bs(b).rem>0||(s&&s.b==b.id)).map(b=>[b.id,`${b.name} (${bs(b).rem} left, ${b.ml} ml)`]);
+if(!bo.length){toast('Create a batch with stock first');return}
+form(s?'Edit sale':'New sale',[['c','Customer','sel',[['','General Customer'],...D.c.map(c=>[c.id,c.name])]],['b','Batch','sel',bo],['q','Quantity (bottles)','number'],['p','Unit price (0 = batch price)','number'],['d','Discount (amount)','number'],['paid','Paid now (blank = full)','number'],['dt','Date','date'],['n','Notes','text']],s||{dt:today(),q:1,d:0,p:0,paid:''},o=>{
+const b=D.b.find(x=>x.id==o.b),st=bs(b),own=s&&s.b==b.id?s.q-(s.r||0):0;if(o.q<=0){toast('Quantity must be above 0');return false}
+if(o.q>st.rem+own){toast('Only '+(st.rem+own)+' bottles left in this batch');return false}
+const p=o.p||b.price,tot=o.q*p-o.d,paid=document.getElementById('f_paid').value===''?tot:o.paid;
+const n={id:s?s.id:uid(),c:o.c,b:o.b,q:o.q,p,d:o.d,paid,dt:o.dt,n:o.n,r:0,inv:s?s.inv:D.s.length+1};if(s){n.r=Math.min(s.r||0,o.q);n.inv=s.inv;D.s[D.s.findIndex(x=>x.id==s.id)]=n}else D.s.push(n)})}
+function saleView(id){const s=D.s.find(x=>x.id==id),b=D.b.find(x=>x.id==s.b);
+sheet(`<h3>${D.set.name}</h3><p class=mut>Invoice INV-${String(s.inv).padStart(4,'0')} · ${s.dt}</p><table>${[['Customer',cname(s.c)],['Batch',b.name],['Bottle size',b.ml+' ml'],['Quantity',s.q+(s.r?' (returned '+s.r+')':'')],['Price',m(s.p)],['Discount',m(s.d)],['Total',m(saleNet(s))],['Paid',m(s.paid)],['Balance',m(saleNet(s)-s.paid)]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+<div class=r><button onclick="window.print()">Print</button><button class=g onclick="saleForm(D.s.find(x=>x.id=='${id}'))">Edit</button></div>
+<div class=r><button class=g onclick="retForm('${id}')">Return</button><button class=d onclick="ask('Stock and profit will be restored.',()=>D.s=D.s.filter(x=>x.id!='${id}'))">Delete</button><button class=g onclick="cl()">Close</button></div>`)}
+function retForm(id){const s=D.s.find(x=>x.id==id);form('Sales return',[['r','Total bottles returned (max '+s.q+')','number']],s,o=>{if(o.r<0||o.r>s.q){toast('Invalid quantity');return false}s.r=o.r})}
+/* ---------- Customers, expenses, stock ---------- */
+function custForm(c){form(c?'Edit customer':'New customer',[['name','Name','text'],['phone','Phone','tel'],['addr','Address','text'],['type','Type','sel',['Retail','Wholesale','Distributor','Other'].map(x=>[x,x])],['ob','Opening balance','number'],['notes','Notes','text']],c,o=>{if(!o.name){toast('Enter a name');return false}if(c)Object.assign(c,o);else D.c.push({id:uid(),...o})})}
+function custView(id){const c=D.c.find(x=>x.id==id);let bal=num(c.ob);const L=[...D.s.filter(s=>s.c==id).flatMap(s=>{const r=[[s.dt,'Sale '+s.q+'×'+D.b.find(b=>b.id==s.b).ml+'ml',saleNet(s),0]];if(s.paid)r.push([s.dt,'Paid at sale',0,s.paid]);return r}),...D.p.filter(p=>p.c==id).map(p=>[p.dt,'Payment',0,p.amt])].sort((a,b)=>a[0].localeCompare(b[0]));
+sheet(`<h3>${c.name}</h3><p class=mut>${c.type} · ${c.phone||''} · Opening ${m(c.ob)}</p><table><tr><th>Date</th><th>Debit</th><th>Credit</th><th>Balance</th></tr>${L.map(l=>{bal+=l[2]-l[3];return`<tr><td>${l[0]}<br><span class=mut>${l[1]}</span></td><td>${l[2]?m(l[2]):''}</td><td>${l[3]?m(l[3]):''}</td><td>${m(bal)}</td></tr>`}).join('')}</table><p><b>Outstanding: ${m(bal)}</b></p>
+<div class=r><button onclick="payForm('${id}')">Add payment</button><button class=g onclick="custForm(D.c.find(x=>x.id=='${id}'))">Edit</button></div><div class=r><button class=d onclick="delCust('${id}')">Delete</button><button class=g onclick="cl()">Close</button></div>`)}
+const payForm=id=>form('Payment received',[['amt','Amount','number'],['dt','Date','date']],{dt:today()},o=>{if(o.amt<=0){toast('Enter amount');return false}D.p.push({id:uid(),c:id,...o})});
+const delCust=id=>{if(D.s.some(s=>s.c==id)){toast('Customer has sales. Delete those first.');return}ask('Customer will be removed.',()=>D.c=D.c.filter(c=>c.id!=id))};
+const expForm=()=>form('New expense',[['cat','Category (type any)','text'],['amt','Amount','number'],['dt','Date','date'],['n','Notes','text']],{dt:today(),cat:'Other'},o=>{if(o.amt<=0){toast('Enter amount');return false}D.e.push({id:uid(),...o})});
+function adjForm(){if(!D.b.length){toast('Create a batch first');return}form('Damaged / lost stock',[['b','Batch','sel',D.b.map(b=>[b.id,b.name+' ('+bs(b).rem+' left)'])],['q','Bottles','number'],['why','Reason (damaged, lost, leakage…)','text'],['dt','Date','date']],{dt:today(),why:'Damaged'},o=>{const b=D.b.find(x=>x.id==o.b);if(o.q<=0||o.q>bs(b).rem){toast('Invalid quantity');return false}D.a.push({id:uid(),...o})})}
+/* ---------- Views ---------- */
+const V={
+d(){const B=D.b.map(b=>[b,bs(b)]),sum=(a,f)=>a.reduce((x,y)=>x+f(y),0),rev=sum(B,x=>x[1].rev),cost=sum(B,x=>x[1].cost),ex=sum(D.e,e=>e.amt),profit=rev-cost-ex,
+ts=sum(D.s.filter(s=>s.dt==today()),saleNet),out=sum(D.c,cbal),act=B.filter(x=>x[1].rem>0),low=act.filter(x=>x[1].rem<=x[1].bot*.1);
+const K=(l,v,t)=>`<div class=k onclick="go('${t}')"><span>${l}</span><b>${v}</b></div>`;
+return`<h2>${D.set.name}</h2><div class=big onclick="go('x')"><span>Net profit</span><b>${m(profit)}</b><span>Sales ${m(rev)} − batch costs ${m(cost)} − expenses ${m(ex)}</span></div><div class=grid>
+${K('Production',sum(B,x=>x[1].bot)+' bottles','b')}${K('Litres available',sum(B,x=>x[1].remL).toFixed(1)+' L','k')}${K('Bottles available',sum(B,x=>x[1].rem),'k')}${K('Total sales',m(rev),'s')}
+${K("Today's sales",m(ts),'s')}${K('Expenses',m(ex),'x')}${K('Customers',D.c.length,'c')}${K('Owed to you',m(out),'c')}${K('Active batches',act.length,'b')}${K('Low stock',low.length+' batches','k')}</div>`},
+b(){return`<h2>Batches</h2><button onclick="batchForm()" style="width:100%;margin-bottom:10px">New batch</button>`+([...D.b].reverse().map(batchCard).join('')||'<p class=mut>No batches yet. Create your first batch.</p>')},
+s(){return`<h2>Sales</h2><button onclick="saleForm()" style="width:100%;margin-bottom:10px">New sale</button>`+([...D.s].sort((a,b)=>b.dt.localeCompare(a.dt)).map(s=>`<div class=card onclick="saleView('${s.id}')"><div class=row><b>${cname(s.c)}</b><b>${m(saleNet(s))}</b></div><div class=mut>${s.dt} · ${s.q-(s.r||0)} bottles · ${D.b.find(b=>b.id==s.b).name}${saleNet(s)-s.paid>0.005?' · owes '+m(saleNet(s)-s.paid):''}</div></div>`).join('')||'<p class=mut>No sales yet.</p>')},
+k(){const g={};D.b.forEach(b=>{const s=bs(b),r=g[b.ml]||(g[b.ml]={p:0,s:0,r:0,d:0});r.p+=s.bot;r.s+=s.sold;r.d+=s.dmg;r.r+=D.s.filter(x=>x.b==b.id).reduce((a,x)=>a+(x.r||0),0)});
+return`<h2>Bottle inventory</h2><div class=card><table><tr><th>Size</th><th>Made</th><th>Sold</th><th>Ret.</th><th>Dmg</th><th>Avail.</th></tr>${Object.keys(g).sort((a,b)=>a-b).map(k=>{const r=g[k];return`<tr><td>${k} ml</td><td>${r.p}</td><td>${r.s}</td><td>${r.r}</td><td>${r.d}</td><td><b>${r.p-r.s-r.d}</b></td></tr>`}).join('')}</table></div>
+<button onclick="adjForm()" style="width:100%;margin-bottom:10px">Record damaged / lost</button>`+D.a.map(a=>`<div class=card><div class=row><span>${a.q} × ${D.b.find(b=>b.id==a.b).name}</span><button class=g onclick="ask('Stock will be restored.',()=>D.a=D.a.filter(x=>x.id!='${a.id}'))">Delete</button></div><span class=mut>${a.dt} · ${a.why}</span></div>`).join('')},
+c(){return`<h2>Customers</h2><button onclick="custForm()" style="width:100%;margin-bottom:10px">New customer</button>`+(D.c.map(c=>`<div class=card onclick="custView('${c.id}')"><div class=row><b>${c.name}</b><b class="${cbal(c)>0?'neg':''}">${m(cbal(c))}</b></div><span class=mut>${c.type} · ${c.phone||''}</span></div>`).join('')||'<p class=mut>No customers yet. Quick sales can use General Customer.</p>')},
+x(){return`<h2>Expenses</h2><button onclick="expForm()" style="width:100%;margin-bottom:10px">New expense</button>`+D.e.map(e=>`<div class=card><div class=row><b>${e.cat}</b><b>${m(e.amt)}</b></div><div class=row><span class=mut>${e.dt} ${e.n||''}</span><button class=g onclick="ask('Expense will be removed.',()=>D.e=D.e.filter(x=>x.id!='${e.id}'))">Delete</button></div></div>`).join('')+
+`<h2>Settings</h2><div class=card><label>Business name<input value="${D.set.name}" oninput="D.set.name=this.value;save()"></label><label>Currency<input value="${D.set.cur}" oninput="D.set.cur=this.value;save()"></label></div>
+<h2>Backup</h2><div class=card><textarea id=bk rows=4 placeholder="Paste a backup here to restore"></textarea><div class=r><button onclick="bkp()">Create backup</button><button class=g onclick="rst()">Restore</button></div><p class=mut>Copy the backup text and keep it safe. Data lives in this browser.</p><button class=d onclick="ask('All data will be erased.',()=>{D={b:[],s:[],c:[],e:[],a:[],p:[],set:D.set}})">Reset all data</button></div>`}};
+function bkp(){const t=$('bk');t.value=JSON.stringify(D);t.select();try{navigator.clipboard.writeText(t.value);toast('Backup copied')}catch(e){toast('Select and copy the text')}}
+function rst(){try{const o=JSON.parse($('bk').value);if(!o.b||!o.s)throw 0;ask('This replaces current data with the backup.',()=>D=o)}catch(e){toast('Not a valid backup')}}
+function render(){$('v').innerHTML=V[tab]();$('n').innerHTML=NAV.map(n=>`<a class="${n[0]==tab?'on':''}" onclick="go('${n[0]}')">${n[1]}</a>`).join('')}
+render();
+</script></body></html>
